@@ -12,50 +12,50 @@ jobs:
 
     steps:
     - name: 1. Descargar el código
-    uses: actions/checkout@v4
+      uses: actions/checkout@v4
 
     - name: 2. Configurar AWS
-    uses: aws-actions/configure-aws-credentials@v4
-    with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-      aws-region: us-east-1
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: us-east-1
 
     - name: 3. Login en ECR, Build y Push
-    id: login-ecr
-    uses: aws-actions/amazon-ecr-login@v2
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
     - name: Construir y Publicar
-    env:
-      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      ECR_REPOSITORY: tienda-frontend 
-      IMAGE_TAG: latest
-    run: |
-      docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-      docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: tienda-frontend 
+        IMAGE_TAG: latest
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: 4. Despliegue en EC2 (CD)
-    uses: appleboy/ssh-action@master
-    with:
-      host: ${{ secrets.EC2_PUBLIC_IP }} 
-      username: ${{ secrets.EC2_USER }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      script: |
-        aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_PUBLIC_IP }} 
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
         
-        mkdir -p ~/frontend && cd ~/frontend
+          mkdir -p ~/frontend && cd ~/frontend
         
-        cat << 'EOF' > docker-compose.yml
-        version: "3.8"
-        services:
-          tienda-frontend:
-            image: ${{ steps.login-ecr.outputs.registry }}/tienda-frontend:latest
-            container_name: tienda-frontend
-            ports:
-              - "80:80"
-          restart: always
-      EOF
+          cat << 'EOF' > docker-compose.yml
+          version: "3.8"
+          services:
+            tienda-frontend:
+              image: ${{ steps.login-ecr.outputs.registry }}/tienda-frontend:latest
+              container_name: tienda-frontend
+              ports:
+                - "80:80"
+              restart: always
+          EOF
 
-      sudo docker compose pull
-      sudo docker compose up -d
+          sudo docker compose pull
+          sudo docker compose up -d
