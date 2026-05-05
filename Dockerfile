@@ -1,22 +1,28 @@
 # ETAPA 1: Construcción (Build)
-# Usamos una imagen de Node para preparar los archivos si fuera necesario
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY . .
+# Copiamos los archivos necesarios
+COPY index.html app.js ./
 
 # ETAPA 2: Ejecución (Servidor Nginx)
-# Usamos un Nginx ligero
 FROM nginx:stable-alpine
 
-# SEGURIDAD: Cambiamos permisos para que Nginx pueda correr sin ser root
+# SEGURIDAD: Cambiamos permisos para correr como usuario no root
 RUN touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
 
-# Copiamos los archivos estáticos desde la etapa de build
+# 1. Limpiamos la configuración y archivos por defecto
+RUN rm -rf /usr/share/nginx/html/*
+
+# 2. Copiamos tus archivos estáticos desde la etapa de build
 COPY --from=build /app/index.html /usr/share/nginx/html/
 COPY --from=build /app/app.js /usr/share/nginx/html/
 
-# Cambiamos al usuario no privilegiado que ya trae la imagen de Nginx
+# 3. INTEGRACIÓN: Copiamos la configuración del Proxy Inverso
+# Este es el paso clave para que el Front vea al Back privado
+COPY default.conf /etc/nginx/conf.d/default.conf
+
+# Cambiamos al usuario no privilegiado
 USER nginx
 
 EXPOSE 80
