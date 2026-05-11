@@ -1,10 +1,12 @@
+# CI Pipeline para desplegar el frontend de Tienda Perritos en AWS EC2 usando GitHub Actions
 name: CI Pipeline - Frontend Tienda Perritos
 
+# Este workflow se activa al hacer push a la rama "deploy". Construye la imagen Docker del frontend, la sube a ECR y luego se conecta por SSH a la instancia EC2 para actualizar el contenedor con Docker Compose.
 on:
   push:
     branches: 
       - deploy
-
+# Variables de entorno para la configuración de AWS y la instancia EC2
 jobs:
   build-and-push:
     name: Construir y Desplegar Frontend
@@ -21,11 +23,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
         aws-region: us-east-1
-
-    - name: 3. Login en ECR, Build y Push
+# Paso para loguearse en ECR, construir la imagen Docker del frontend y subirla al repositorio ECR
+    - name: 3. Login en ECR, Build y Push 
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
-
+# Luego se construye la imagen Docker usando el Dockerfile del proyecto y se etiqueta con "latest" antes de subirla al repositorio ECR.
     - name: Construir y Publicar
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -34,7 +36,7 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
+# Finalmente, se conecta por SSH a la instancia EC2 usando la acción "appleboy/ssh-action". Dentro de la instancia, se ejecutan comandos para loguearse en ECR, crear un archivo docker-compose.yml con la configuración del servicio del frontend, y luego se actualiza el contenedor usando Docker Compose.
     - name: 4. Despliegue en EC2 (CD)
       uses: appleboy/ssh-action@master
       with:

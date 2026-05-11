@@ -7,6 +7,7 @@ const API_BASE = "/api/productos";
 
 let editandoId = null;
 
+// Elementos del DOM
 const tbody = document.getElementById("tbodyProductos");
 const btnCargar = document.getElementById("btnCargar");
 const btnGuardar = document.getElementById("btnGuardar");
@@ -14,16 +15,19 @@ const btnCancelar = document.getElementById("btnCancelar");
 const formTitle = document.getElementById("formTitle");
 const statusDiv = document.getElementById("status");
 
+// Campos del formulario
 const inputNombre = document.getElementById("nombre");
 const inputDescripcion = document.getElementById("descripcion");
 const inputPrecio = document.getElementById("precio");
 const inputStock = document.getElementById("stock");
 
+// Funciones
 function setStatus(mensaje, tipo = "ok") {
   statusDiv.textContent = mensaje;
   statusDiv.className = "status " + tipo;
 }
 
+// Cargar productos desde el backend
 async function cargarProductos() {
   try {
     const res = await fetch(API_BASE);
@@ -37,6 +41,7 @@ async function cargarProductos() {
   }
 }
 
+// Renderizar productos en la tabla
 function renderProductos(productos) {
   tbody.innerHTML = "";
   productos.forEach((p) => {
@@ -75,6 +80,7 @@ function renderProductos(productos) {
   });
 }
 
+// Limpiar formulario y resetear estado de edición
 function limpiarFormulario() {
   editandoId = null;
   formTitle.textContent = "Nuevo producto";
@@ -84,6 +90,7 @@ function limpiarFormulario() {
   inputStock.value = "";
 }
 
+// Obtener datos del formulario y convertirlos al formato adecuado
 function obtenerDatosFormulario() {
   return {
     nombre: inputNombre.value.trim(),
@@ -93,6 +100,7 @@ function obtenerDatosFormulario() {
   };
 }
 
+// Validar datos del producto antes de enviarlos al backend
 function validarProducto(prod) {
   if (!prod.nombre) return "El nombre es obligatorio.";
   if (isNaN(prod.precio) || prod.precio < 0) return "El precio debe ser un número mayor o igual a 0.";
@@ -100,6 +108,7 @@ function validarProducto(prod) {
   return null;
 }
 
+// Guardar producto (crear o actualizar)
 async function guardarProducto() {
   const producto = obtenerDatosFormulario();
   const error = validarProducto(producto);
@@ -130,7 +139,7 @@ async function guardarProducto() {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.message || "Error al guardar el producto");
     }
-
+    // Refrescar lista y limpiar formulario
     limpiarFormulario();
     await cargarProductos();
     setStatus(editandoId ? "Producto actualizado correctamente." : "Producto creado correctamente.", "ok");
@@ -140,6 +149,7 @@ async function guardarProducto() {
   }
 }
 
+// Cargar producto en el formulario para editarlo
 async function editarProducto(id) {
   try {
     const res = await fetch(`${API_BASE}/${id}`);
@@ -158,6 +168,7 @@ async function editarProducto(id) {
   }
 }
 
+// Eliminar producto
 async function eliminarProducto(id) {
   try {
     const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });

@@ -1,9 +1,13 @@
+# Docker Compose para el frontend de Tienda Perritos
+# Version 3.8 de Docker Compose
 version: "3.8"
 
+# Definición de servicios
 services:
-  tienda-frontend:
-    build: .
-    container_name: tienda-frontend
-    ports:
-      - "80:80"
-  restart: always
+  # Servicio para el frontend de la tienda
+  tienda-frontend: # Nombre del servicio
+    build: . # Construye la imagen Docker usando el Dockerfile en el directorio actual
+    container_name: tienda-frontend # Nombre del contenedor
+    ports: # Mapea el puerto 80 del contenedor al puerto 80 del host para acceder a la aplicación
+      - "80:80" # Expone el puerto 80 del contenedor en el puerto 80 del host
+    restart: always # Reinicia el contenedor automáticamente si se detiene o falla
