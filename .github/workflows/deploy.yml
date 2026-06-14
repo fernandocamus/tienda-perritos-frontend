@@ -6,7 +6,7 @@ on:
   push:
     branches: 
       - deploy
-# Variables de entorno para la configuración de AWS y la instancia EC2
+# Variables de entorno para la configuración de AWS y la instancia EC2  
 jobs:
   build-and-push:
     name: Construir y Desplegar Frontend
